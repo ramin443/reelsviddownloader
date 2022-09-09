@@ -1,4 +1,4 @@
-package com.reelsdownloader
+package com.reelsviddownloader
 
 import io.flutter.embedding.android.FlutterActivity
 
