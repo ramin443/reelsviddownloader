@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:674829294378:android:3aee9f4a890b586821dc53",
         "android_client_info": {
-          "package_name": "com.reelsviddownloader"
+          "package_name": "com.reelsdownloader"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "674829294378-2bchteepbcp1rh5i7f0dmj7r04pv7pq4.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.reelsviddownloader",
+            "package_name": "com.reelsdownloader",
             "certificate_hash": "d1f4c39c97e57a697d2c4de5a6fa903a2b9f84bf"
           }
         },
