@@ -26,7 +26,9 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 import 'package:rate_my_app/rate_my_app.dart';
+import 'package:reelsdownloader/constants/stringconstants.dart';
 import 'package:reelsdownloader/getxcontrollers/youtubevideoinfocontroller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../config.dart';
@@ -67,7 +69,81 @@ class ClipboardController extends GetX.GetxController {
   DownloadedVidDatabaseHelper downloadedVidDatabaseHelper =
       DownloadedVidDatabaseHelper();
   List<TaskInfo> taskss = [];
+  String currentparsestring=defaultparsestring;
+  String finalparsestring=defaultparsestring;
 
+  initializeparsestrings()async{
+    final prefs=await SharedPreferences.getInstance();
+    String parseval="parsekey";
+    String lastrefreshval="Last refresh date";
+    String loadtimeval="loadtime";
+    int loadtimes;
+    String datetoday=DateFormat.yMMMd('en_US').format(DateTime.now());
+    String fetchedkey=defaultparsestring;
+    String lastrefreshdate;
+
+    if(prefs.getInt(loadtimeval)==null){
+      prefs.setString(lastrefreshval, datetoday);
+      try{
+        fetchedkey=await FirebaseFirestore.instance
+            .collection('ParseKey')
+            .doc('parsedata')
+            .get()
+            .then((value) {
+          return value.data()!['key']; // Access your after your get the data
+        });
+//        print("fetch key from firestore"+fetchedkey);
+      }catch(err){
+        fetchedkey=defaultparsestring;
+      }
+      prefs.setString(parseval, fetchedkey);
+  //    print("Fetched key is "+fetchedkey);
+    }else{
+      lastrefreshdate=prefs.getString(lastrefreshval)!;
+      if(lastrefreshdate!=datetoday){
+        try{
+          fetchedkey=await FirebaseFirestore.instance
+              .collection('ParseKey')
+              .doc('parsedata')
+              .get()
+              .then((value) {
+            return value.data()!['key']; // Access your after your get the data
+          });
+          print("fetch key from firestore"+fetchedkey);
+        }catch(err){
+          fetchedkey=defaultparsestring;
+        }
+        prefs.setString(parseval, fetchedkey);
+        lastrefreshdate=datetoday;
+      }
+    }
+    if(prefs.getInt(loadtimeval)==null){
+      prefs.setInt(loadtimeval, 1);
+    }else{
+      loadtimes=prefs.getInt(loadtimeval)!;
+      prefs.setInt(loadtimeval, loadtimes++);
+    }
+/*    fetchedkey=await FirebaseFirestore.instance
+        .collection('ParseKey')
+        .doc('parsedata')
+        .get()
+        .then((value) {
+      return value.data()!['key'];});
+
+    print("Fetchedkey is:"+fetchedkey);
+    */
+    setfinalparsestring(fetchedkey);
+  }
+
+  void setfinalparsestring(String finparse)async{
+    finalparsestring=finparse;
+    print(finalparsestring);
+    update();
+  }
+  void initallprefs()async{
+    final prefs=await SharedPreferences.getInstance();
+    prefs.setString("Last refresh date", DateFormat.yMMMd('en_US').format(DateTime.now()));
+  }
   setdownloadno() {
     downloadno = downloadno! + 1;
     update();

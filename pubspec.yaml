@@ -47,6 +47,8 @@ dependencies:
   firebase_auth: ^3.3.5
   facebook_video_download: ^0.0.4
   instagram_public_api: ^0.2.3
+  shared_preferences: ^2.0.15
+  google_mobile_ads: ^1.3.0
 
 
 dev_dependencies:
