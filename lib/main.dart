@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:reelsdownloader/screens/base.dart';
 import 'package:reelsdownloader/screens/initial/splashscreen.dart';
+import 'package:reelsdownloader/screens/testdownloadpage.dart';
 import 'package:reelsdownloader/testers/extractlinktest.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await FlutterDownloader.initialize(// option: set to false to disable working with http links (default: false)
+  debug: true,
+    ignoreSsl: true
   );
   await Firebase.initializeApp();
   runApp(const MyApp());
