@@ -50,6 +50,7 @@ class Home extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+
                                 Container(
                                   margin: EdgeInsets.only(
                                       //          top: 29,bottom: 18
@@ -294,11 +295,11 @@ class Home extends StatelessWidget {
   }
 
   Widget downloadbutton(
-      BuildContext context, String downloadlink, String title) {
+      BuildContext context, String downloadlink, String title, String vidid) {
     double screenWidth = MediaQuery.of(context).size.width;
     return GestureDetector(
       onTap: () {
-        clipboardController.initializedownload(downloadlink, title);
+        clipboardController.initializedownload(downloadlink, title,vidid);
       },
       child: Container(
         //      height: 30,

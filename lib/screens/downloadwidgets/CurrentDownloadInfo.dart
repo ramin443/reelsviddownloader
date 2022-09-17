@@ -12,13 +12,14 @@ import '../../getxcontrollers/clipboardcontroller.dart';
 class CurrentDownloadInfo extends StatelessWidget {
   final String? thumbnailimagelink;
   final String? videotitle;
+  final String? videoid;
   final String? channelimage;
   final String? channeltitle;
   final String? channeldescription;
   final String? extracteddownloadlink;
   final ClipboardController clipboardController =
   GetX.Get.put(ClipboardController());
-  CurrentDownloadInfo({@required this.thumbnailimagelink,@required this.videotitle
+  CurrentDownloadInfo({@required this.thumbnailimagelink,@required this.videotitle,@required this.videoid
     ,@required this.channelimage,@required this.channeltitle,@required this.channeldescription,
   @required this.extracteddownloadlink});
   @override
@@ -186,8 +187,7 @@ class CurrentDownloadInfo extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   downloadbutton(context,
-
-                      extracteddownloadlink!,videotitle!)
+                      extracteddownloadlink!,videotitle!,videoid!)
          //         qualitybox(context, '360p'),
            //       qualitybox(context, '720p')
                 ],
@@ -211,11 +211,11 @@ class CurrentDownloadInfo extends StatelessWidget {
     }
   }
   Widget downloadbutton(BuildContext context,
-      String downloadlink, String title){
+      String downloadlink, String title, String videoid){
     double screenWidth = MediaQuery.of(context).size.width;
     return GestureDetector(
       onTap: ()async{
-        clipboardController.prepare(downloadlink, title);
+        clipboardController.prepare(downloadlink, title, videoid);
         reflectdownloads();
       },
       child: Container(

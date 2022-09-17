@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -57,6 +59,7 @@ class ClipboardController extends GetX.GetxController {
   String? currentvideothumbnaillink = '';
   String? currentyoutubechannelthumbnaillink = '';
   String? currentytchanneltitle = '';
+  String? currentvideoid='';
   String? currentytchanneldescription = '';
   static const _baseUrl = 'www.googleapis.com';
   String? _localPath;
@@ -65,15 +68,30 @@ class ClipboardController extends GetX.GetxController {
   ReceivePort _port = ReceivePort();
   int? downloadno = 0;
   List<DownloadedVideo> tasklist = [];
+  List<String> downloadpressedlist=[];
   int count = 0;
   DownloadedVidDatabaseHelper downloadedVidDatabaseHelper =
       DownloadedVidDatabaseHelper();
   List<TaskInfo> taskss = [];
-
-
+  final FirebaseAnalytics _analytics = FirebaseAnalytics();
   String currentparsestring=defaultparsestring;
   String finalparsestring=defaultparsestring;
 
+  Future sendAnalyticsEvent(
+      {String? eventName, String? clickevent}) async {
+    await _analytics.logEvent(
+      name: '${eventName}',
+      parameters: <String, dynamic>{
+        'clickEvent': "User has clicked"
+      },
+    );
+  }
+
+  void savevidtogallery(String filepath)async{
+    GallerySaver.saveVideo(filepath).then((value) => {
+      print("saved")
+    });
+  }
   initializeparsestrings()async{
     final prefs=await SharedPreferences.getInstance();
     String parseval="parsekey";
@@ -161,8 +179,9 @@ class ClipboardController extends GetX.GetxController {
     }
   }
 
-  updateinstainfo(String? title, String? thumbnailink) {
+  updateinstainfo(String? title,String? videoid, String? thumbnailink) {
     currentvideotitle = title;
+    splitandgetvideoid(videoid!);
     currentvideothumbnaillink = thumbnailink;
     update();
   }
@@ -229,7 +248,19 @@ class ClipboardController extends GetX.GetxController {
     }
     update();
   }
-
+  void splitandgetvideoid(String videolink)async{
+    try{
+      var linkEdit = videolink.replaceAll(" ", "").split("/");
+      var videoid = linkEdit[4];
+      currentvideoid=videoid;
+      update();
+      print("Video id: ");
+      print(videoid);
+    }
+    catch(err){
+      print("Linking error");
+    }
+    }
   Future<void> extractinstalink(String instalink) async {
     try {
       var linkEdit = instalink.replaceAll(" ", "").split("/");
@@ -425,7 +456,7 @@ class ClipboardController extends GetX.GetxController {
     //  tasks[0].savedDir
   }
 
-  initializedownload(String downloadlink, String tracktitle) {
+  initializedownload(String downloadlink, String tracktitle,String curvidid) {
     print("Download link here"
         +downloadlink
         +"\n");
@@ -434,7 +465,7 @@ class ClipboardController extends GetX.GetxController {
     FlutterDownloader.registerCallback(downloadCallback);
     _isLoading = true;
     _permissionReady = false;
-    prepare(downloadlink, tracktitle);
+    prepare(downloadlink, tracktitle,curvidid);
     //  requestDownload(downloadlink);
   }
 
@@ -512,13 +543,13 @@ class ClipboardController extends GetX.GetxController {
     return directory!.path;
   }
 
-  Future<Null> prepare(String downloadlink, String tracktitle) async {
+  Future<Null> prepare(String downloadlink, String tracktitle, String curvidid) async {
     final tasks = await FlutterDownloader.loadTasks();
     _permissionReady = await _checkPermission();
 
     if (_permissionReady!) {
       await _prepareSaveDir();
-      requestDownload(downloadlink, tracktitle);
+      requestDownload(downloadlink, tracktitle,curvidid);
     }
     _isLoading = false;
     update();
@@ -541,15 +572,21 @@ class ClipboardController extends GetX.GetxController {
     return false;
   }
 
-  void requestDownload(String downloadlink, String tracktitle) async {
+  void requestDownload(String downloadlink, String tracktitle,String curvidid) async {
     setdownloadno();
+    print("Current video id");
+    print(curvidid);
+    String filename=currentvideoid!+"mp4";
+    String vid="Cijaz0FOyn-";
+    print(currentvideoid);
     final taskId = await FlutterDownloader.enqueue(
         url: downloadlink,
         headers: {"auth": "test_for_sql_encoding"},
         savedDir: _localPath!,
-        fileName: "tracktitle.substring(0, 17)",
+        fileName: "reelsaver",
         showNotification: true,
         openFileFromNotification: true);
+    downloadpressedlist.add(currentvideoid!);
     _save(DownloadedVideo(
         currentvideotitle,
         currentvideothumbnaillink,
@@ -559,6 +596,7 @@ class ClipboardController extends GetX.GetxController {
         taskId,
         _localPath!));
     savevideotogallery(_localPath.toString(), tracktitle.substring(0, 17));
+    savevidtogallery(_localPath.toString());
     updateListView();
     loadtasks();
   }
@@ -1167,18 +1205,127 @@ class ClipboardController extends GetX.GetxController {
             ),
           ),
           //quality options
+          currentvideotitle==null?SizedBox(height: 0,):
           Container(
               margin: EdgeInsets.only(top: 20),
               child: currentvideotitle != null &&
-                      taskss.length != 0 &&
-                      taskss[taskss.length - 1].name ==
-                          currentvideotitle!.substring(
-                              0,
-                              currentvideotitle!.length > 17
-                                  ? 17
-                                  : currentvideotitle!.length - 1)
-                  ? taskss[taskss.length - 1].status ==
-                          DownloadTaskStatus.complete
+                      taskss.isNotEmpty &&
+                  downloadpressedlist[downloadpressedlist.length-1]==currentvideoid &&
+                      taskss[taskss.length - 1].status ==
+                          DownloadTaskStatus.running
+                  ?
+              Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.only(
+                      //                top: 12,bottom: 10
+                        top: screenwidth * 0.0291,
+                        bottom: screenwidth * 0.0243),
+                    child: Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          child: Text(
+                            taskss[taskss.length - 1].status ==
+                                DownloadTaskStatus.canceled
+                                ? "Download cancelled"
+                                : taskss[taskss.length - 1]
+                                .progress! <
+                                100
+                                ? "Downloading..  " +
+                                taskss[taskss.length - 1]
+                                    .progress!
+                                    .toString() +
+                                " %"
+                                : "Download Successful",
+                            style: TextStyle(
+                                fontFamily: proximanovaregular,
+                                color: Colors.black87,
+                                //             fontSize: 13
+                                fontSize: screenwidth * 0.0316),
+                          ),
+                        ),
+                        taskss[taskss.length - 1].status ==
+                            DownloadTaskStatus.canceled
+                            ? GestureDetector(
+                            onTap: () async {
+                              await FlutterDownloader.retry(
+                                  taskId: taskss[
+                                  taskss.length.toInt() -
+                                      1]
+                                      .taskId!);
+                              loadtasks();
+                            },
+                            child: Icon(
+                              CupertinoIcons
+                                  .refresh_circled_solid,
+                              color: Colors.redAccent
+                                  .withOpacity(0.80),
+                              //      size: 24,
+                              size: screenwidth * 0.0583,
+                            ))
+                            : taskss[taskss.length - 1].progress! <
+                            100
+                            ? GestureDetector(
+                            onTap: () async {
+                              await FlutterDownloader.cancel(
+                                  taskId: taskss[taskss.length
+                                      .toInt() -
+                                      1]
+                                      .taskId!);
+                            },
+                            child: Icon(
+                              CupertinoIcons
+                                  .xmark_circle_fill,
+                              color: Colors.redAccent
+                                  .withOpacity(0.80),
+                              //      size: 24,
+                              size: screenwidth * 0.0583,
+                            ))
+                            : Icon(
+                          CupertinoIcons
+                              .checkmark_alt_circle_fill,
+                          color: Color(0xff00C6B0),
+                          //        size: 24,
+                          size: screenwidth * 0.0583,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(
+                      //        bottom: 12.5
+                        bottom: screenwidth * 0.03041),
+                    child: ClipRRect(
+                      borderRadius:
+                      BorderRadius.all(Radius.circular(20)),
+                      child: Container(
+                        width: screenwidth,
+                        decoration: BoxDecoration(
+                          borderRadius:
+                          BorderRadius.all(Radius.circular(20)),
+                        ),
+                        child: LinearProgressIndicator(
+                          backgroundColor:
+                          Color(0xff707070).withOpacity(0.24),
+                          color: taskss[taskss.length - 1].progress ==
+                              100
+                              ? Color(0xff00C6B0)
+                              : royalbluethemedcolor,
+                          value: taskss[taskss.length - 1].progress! /
+                              100,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+                  :
+    taskss.isNotEmpty &&
+    downloadpressedlist[downloadpressedlist.length-1]==currentvideoid &&
+    taskss[taskss.length - 1].status ==
+    DownloadTaskStatus.complete
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -1218,114 +1365,7 @@ class ClipboardController extends GetX.GetxController {
                             )
                           ],
                         )
-                      : Column(
-                          children: [
-                            Container(
-                              margin: EdgeInsets.only(
-                                  //                top: 12,bottom: 10
-                                  top: screenwidth * 0.0291,
-                                  bottom: screenwidth * 0.0243),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    child: Text(
-                                      taskss[taskss.length - 1].status ==
-                                              DownloadTaskStatus.canceled
-                                          ? "Download cancelled"
-                                          : taskss[taskss.length - 1]
-                                                      .progress! <
-                                                  100
-                                              ? "Downloading..  " +
-                                                  taskss[taskss.length - 1]
-                                                      .progress!
-                                                      .toString() +
-                                                  " %"
-                                              : "Download Successful",
-                                      style: TextStyle(
-                                          fontFamily: proximanovaregular,
-                                          color: Colors.black87,
-                                          //             fontSize: 13
-                                          fontSize: screenwidth * 0.0316),
-                                    ),
-                                  ),
-                                  taskss[taskss.length - 1].status ==
-                                          DownloadTaskStatus.canceled
-                                      ? GestureDetector(
-                                          onTap: () async {
-                                            await FlutterDownloader.retry(
-                                                taskId: taskss[
-                                                        taskss.length.toInt() -
-                                                            1]
-                                                    .taskId!);
-                                            loadtasks();
-                                          },
-                                          child: Icon(
-                                            CupertinoIcons
-                                                .refresh_circled_solid,
-                                            color: Colors.redAccent
-                                                .withOpacity(0.80),
-                                            //      size: 24,
-                                            size: screenwidth * 0.0583,
-                                          ))
-                                      : taskss[taskss.length - 1].progress! <
-                                              100
-                                          ? GestureDetector(
-                                              onTap: () async {
-                                                await FlutterDownloader.cancel(
-                                                    taskId: taskss[taskss.length
-                                                                .toInt() -
-                                                            1]
-                                                        .taskId!);
-                                              },
-                                              child: Icon(
-                                                CupertinoIcons
-                                                    .xmark_circle_fill,
-                                                color: Colors.redAccent
-                                                    .withOpacity(0.80),
-                                                //      size: 24,
-                                                size: screenwidth * 0.0583,
-                                              ))
-                                          : Icon(
-                                              CupertinoIcons
-                                                  .checkmark_alt_circle_fill,
-                                              color: Color(0xff00C6B0),
-                                              //        size: 24,
-                                              size: screenwidth * 0.0583,
-                                            ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(
-                                  //        bottom: 12.5
-                                  bottom: screenwidth * 0.03041),
-                              child: ClipRRect(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(20)),
-                                child: Container(
-                                  width: screenwidth,
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(20)),
-                                  ),
-                                  child: LinearProgressIndicator(
-                                    backgroundColor:
-                                        Color(0xff707070).withOpacity(0.24),
-                                    color: taskss[taskss.length - 1].progress ==
-                                            100
-                                        ? Color(0xff00C6B0)
-                                        : royalbluethemedcolor,
-                                    value: taskss[taskss.length - 1].progress! /
-                                        100,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                  : Row(
+                      : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         downloadbutton(
@@ -1341,7 +1381,7 @@ class ClipboardController extends GetX.GetxController {
 
   downloadcurrentvideo() {
     loadtasks();
-    initializedownload(extractedlink!, currentvideotitle!);
+    initializedownload(extractedlink!, currentvideotitle!,currentvideoid!);
   }
 
   reflectdownloads() async {
@@ -1369,7 +1409,7 @@ class ClipboardController extends GetX.GetxController {
     return GestureDetector(
       onTap: () {
         reflectdownloads();
-        initializedownload(downloadlink, title);
+        initializedownload(downloadlink, title,currentvideoid!);
         loadtasks();
       },
       child: Container(
@@ -1492,6 +1532,7 @@ class ClipboardController extends GetX.GetxController {
     var node = edges['node'];
     var caption = node['text'];
     currentvideotitle = caption;
+    splitandgetvideoid(instalink);
     showdownload = 2;
     update();
     return 0;
