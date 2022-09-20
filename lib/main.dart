@@ -9,7 +9,6 @@ import 'package:reelsdownloader/testers/extractlinktest.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await FlutterDownloader.initialize(// option: set to false to disable working with http links (default: false)
-  debug: true,
     ignoreSsl: true
   );
   await Firebase.initializeApp();

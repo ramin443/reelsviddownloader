@@ -113,6 +113,18 @@ class Home extends StatelessWidget {
                                             fontFamily: proximanovaregular)),
                                   ),
                                 ),
+                                GestureDetector(
+                                  onTap: (){
+                                    clipboardController.extractinstatest("https://www.instagram.com/reel/Cijaz0FOyn-/?igshid=YmMyMTA2M2Y=");
+                                  },
+                                  child: Container(
+                                    width: screenwidth,
+                                    height: 22,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
