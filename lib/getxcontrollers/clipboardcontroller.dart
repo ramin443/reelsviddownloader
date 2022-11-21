@@ -1174,8 +1174,7 @@ class ClipboardController extends GetX.GetxController {
               margin: EdgeInsets.only(top: 20),
               child: currentvideotitle != '' &&
                       taskss.isNotEmpty  &&
-                      taskss[taskss.length - 1].name ==
-                          currentvideotitle!
+                          currentvideotitle!.contains( taskss[taskss.length - 1].name!)
                   ? taskss[taskss.length - 1].status ==
                           DownloadTaskStatus.complete
                       ? Row(
@@ -1602,7 +1601,7 @@ class ClipboardController extends GetX.GetxController {
     var caption = node['text'];
     currentvideotitle = caption;
     if(currentvideotitle!.length>15){
-      currentvideotitle!.substring(0,15);
+      currentvideotitle!.substring(0,16);
     }
     showdownload = 2;
     update();
@@ -1629,6 +1628,12 @@ class ClipboardController extends GetX.GetxController {
       print(post[i].videoDuration);
     }
 
+  }
+  void printinfo()async{
+    print("Task name");
+    print(taskss[taskss.length - 1].name);
+    print("Current video title");
+    print(currentvideotitle);
   }
 }
 

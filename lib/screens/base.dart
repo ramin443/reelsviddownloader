@@ -60,7 +60,11 @@ class Base extends StatelessWidget {
               backgroundColor: Colors.transparent,
               centerTitle: false,
               actions: [
-
+                IconButton(onPressed: (){
+                  clipboardController.printinfo();
+                }, icon: Icon(CupertinoIcons.plus_circle_fill,
+                color: Colors.black,
+                size: 24,))
                 //      IconButton(
                 //       onPressed: ()async{
                 //         clipboardController.showrateappdialog(context);
