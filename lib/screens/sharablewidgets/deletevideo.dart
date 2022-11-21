@@ -67,7 +67,7 @@ class DeleteVideo extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        FlatButton(onPressed: (){
+                        GestureDetector(onTap: (){
                           Navigator.pop(context);
 
                         }, child: Container(
@@ -79,7 +79,7 @@ class DeleteVideo extends StatelessWidget {
                                 fontSize: screenwidth*0.0352
                             ),),
                         )),
-                        FlatButton(onPressed: ()async{
+                        GestureDetector(onTap: ()async{
                           await FlutterDownloader.remove(taskId: taskid.toString(),
                           shouldDeleteContent: true
                           );

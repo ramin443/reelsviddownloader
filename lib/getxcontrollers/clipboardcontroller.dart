@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math';
 import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
@@ -543,11 +544,13 @@ class ClipboardController extends GetX.GetxController {
 
   void requestDownload(String downloadlink, String tracktitle) async {
     setdownloadno();
+//    int randomnum=Random().nextInt(99999);
+    String vidtitle=tracktitle.length>15?tracktitle.substring(0,16):tracktitle;
     final taskId = await FlutterDownloader.enqueue(
         url: downloadlink,
         headers: {"auth": "test_for_sql_encoding"},
         savedDir: _localPath!,
-        fileName: "tracktitle.substring(0, 17)",
+        fileName: vidtitle,
         showNotification: true,
         openFileFromNotification: true);
     _save(DownloadedVideo(
@@ -558,7 +561,7 @@ class ClipboardController extends GetX.GetxController {
         currentytchanneldescription,
         taskId,
         _localPath!));
-    savevideotogallery(_localPath.toString(), tracktitle.substring(0, 17));
+    savevideotogallery(_localPath.toString(), vidtitle);
     updateListView();
     loadtasks();
   }
@@ -1169,14 +1172,10 @@ class ClipboardController extends GetX.GetxController {
           //quality options
           Container(
               margin: EdgeInsets.only(top: 20),
-              child: currentvideotitle != null &&
-                      taskss.length != 0 &&
+              child: currentvideotitle != '' &&
+                      taskss.isNotEmpty  &&
                       taskss[taskss.length - 1].name ==
-                          currentvideotitle!.substring(
-                              0,
-                              currentvideotitle!.length > 17
-                                  ? 17
-                                  : currentvideotitle!.length - 1)
+                          currentvideotitle!
                   ? taskss[taskss.length - 1].status ==
                           DownloadTaskStatus.complete
                       ? Row(
@@ -1338,6 +1337,116 @@ class ClipboardController extends GetX.GetxController {
       ),
     );
   }
+  Widget progressshow(BuildContext context){
+    double screenwidth=MediaQuery.of(context).size.width;
+    return Column(
+      children: [
+        Container(
+          margin: EdgeInsets.only(
+            //                top: 12,bottom: 10
+              top: screenwidth * 0.0291,
+              bottom: screenwidth * 0.0243),
+          child: Row(
+            mainAxisAlignment:
+            MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                child: Text(
+                  taskss[taskss.length - 1].status ==
+                      DownloadTaskStatus.canceled
+                      ? "Download cancelled"
+                      : taskss[taskss.length - 1]
+                      .progress! <
+                      100
+                      ? "Downloading..  " +
+                      taskss[taskss.length - 1]
+                          .progress!
+                          .toString() +
+                      " %"
+                      : "Download Successful",
+                  style: TextStyle(
+                      fontFamily: proximanovaregular,
+                      color: Colors.black87,
+                      //             fontSize: 13
+                      fontSize: screenwidth * 0.0316),
+                ),
+              ),
+              taskss[taskss.length - 1].status ==
+                  DownloadTaskStatus.canceled
+                  ? GestureDetector(
+                  onTap: () async {
+                    await FlutterDownloader.retry(
+                        taskId: taskss[
+                        taskss.length.toInt() -
+                            1]
+                            .taskId!);
+                    loadtasks();
+                  },
+                  child: Icon(
+                    CupertinoIcons
+                        .refresh_circled_solid,
+                    color: Colors.redAccent
+                        .withOpacity(0.80),
+                    //      size: 24,
+                    size: screenwidth * 0.0583,
+                  ))
+                  : taskss[taskss.length - 1].progress! <
+                  100
+                  ? GestureDetector(
+                  onTap: () async {
+                    await FlutterDownloader.cancel(
+                        taskId: taskss[taskss.length
+                            .toInt() -
+                            1]
+                            .taskId!);
+                  },
+                  child: Icon(
+                    CupertinoIcons
+                        .xmark_circle_fill,
+                    color: Colors.redAccent
+                        .withOpacity(0.80),
+                    //      size: 24,
+                    size: screenwidth * 0.0583,
+                  ))
+                  : Icon(
+                CupertinoIcons
+                    .checkmark_alt_circle_fill,
+                color: Color(0xff00C6B0),
+                //        size: 24,
+                size: screenwidth * 0.0583,
+              ),
+            ],
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(
+            //        bottom: 12.5
+              bottom: screenwidth * 0.03041),
+          child: ClipRRect(
+            borderRadius:
+            BorderRadius.all(Radius.circular(20)),
+            child: Container(
+              width: screenwidth,
+              decoration: BoxDecoration(
+                borderRadius:
+                BorderRadius.all(Radius.circular(20)),
+              ),
+              child: LinearProgressIndicator(
+                backgroundColor:
+                Color(0xff707070).withOpacity(0.24),
+                color: taskss[taskss.length - 1].progress ==
+                    100
+                    ? Color(0xff00C6B0)
+                    : royalbluethemedcolor,
+                value: taskss[taskss.length - 1].progress! /
+                    100,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   downloadcurrentvideo() {
     loadtasks();
@@ -1492,6 +1601,9 @@ class ClipboardController extends GetX.GetxController {
     var node = edges['node'];
     var caption = node['text'];
     currentvideotitle = caption;
+    if(currentvideotitle!.length>15){
+      currentvideotitle!.substring(0,15);
+    }
     showdownload = 2;
     update();
     return 0;

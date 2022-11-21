@@ -57,7 +57,7 @@ class CancelDownload extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                FlatButton(onPressed: (){
+                GestureDetector(onTap: (){
                   Navigator.pop(context);
 
                 }, child: Container(
@@ -69,7 +69,7 @@ class CancelDownload extends StatelessWidget {
                fontSize: screenwidth*0.0352
                   ),),
                 )),
-                FlatButton(onPressed: (){
+                GestureDetector(onTap: (){
                 }, child: Container(
                   padding: EdgeInsets.symmetric(
                       horizontal: screenwidth*0.03406,vertical: screenwidth*0.01216

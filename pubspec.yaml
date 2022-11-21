@@ -47,7 +47,7 @@ dependencies:
   facebook_video_download: ^0.0.4
   instagram_public_api: ^0.2.3
   shared_preferences: ^2.0.15
-  flutter_downloader: ^1.8.3
+  flutter_downloader: ^1.8.4
 
 dev_dependencies:
   flutter_test:

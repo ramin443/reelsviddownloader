@@ -208,8 +208,7 @@ class _MyHomePageState extends State<MyDownTester> {
           _openDownloadedFile(task).then((success) {
             if (!success) {
               print('open failed');
-              Scaffold.of(context).showSnackBar(SnackBar(
-                  content: Text('Cannot open this file')));
+
             }
           });
         },
@@ -257,8 +256,8 @@ class _MyHomePageState extends State<MyDownTester> {
           SizedBox(
             height: 32.0,
           ),
-          FlatButton(
-              onPressed: () {
+          GestureDetector(
+              onTap: () {
                 _retryRequestPermission();
               },
               child: Text(

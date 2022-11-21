@@ -240,6 +240,7 @@ class Home extends StatelessWidget {
                                               //           )
                                               : nolinkpasted(context),
                                     ]),
+                                clipboardcontroller.progressshow(context),
                                 DownloadInstructionOne(),
                                 RateUs()
                               ],
