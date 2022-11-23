@@ -74,7 +74,11 @@ class ClipboardController extends GetX.GetxController {
 
   String currentparsestring=defaultparsestring;
   String finalparsestring=defaultparsestring;
-
+  int randomnum=0;
+  void randomizenumber(){
+    randomnum=Random().nextInt(99999);
+    update();
+  }
   initializeparsestrings()async{
     final prefs=await SharedPreferences.getInstance();
     String parseval="parsekey";
@@ -190,6 +194,7 @@ class ClipboardController extends GetX.GetxController {
   }
 
   getreelsvideodata(String link) async {
+    randomizenumber();
     getinstavideoinfo(link);
     downloadReels(link);
     getpostownerdetails(link);
@@ -544,8 +549,8 @@ class ClipboardController extends GetX.GetxController {
 
   void requestDownload(String downloadlink, String tracktitle) async {
     setdownloadno();
-//    int randomnum=Random().nextInt(99999);
-    String vidtitle=tracktitle.length>15?tracktitle.substring(0,16):tracktitle;
+    String vidtitle=(tracktitle.length>15?tracktitle.substring(0,16):tracktitle)+randomnum.toString();
+    print("Video title name save:$vidtitle");
     final taskId = await FlutterDownloader.enqueue(
         url: downloadlink,
         headers: {"auth": "test_for_sql_encoding"},
@@ -1174,7 +1179,7 @@ class ClipboardController extends GetX.GetxController {
               margin: EdgeInsets.only(top: 20),
               child: currentvideotitle != '' &&
                       taskss.isNotEmpty  &&
-                          currentvideotitle!.contains( taskss[taskss.length - 1].name!)
+                          currentvideotitle==taskss[taskss.length - 1].name!
                   ? taskss[taskss.length - 1].status ==
                           DownloadTaskStatus.complete
                       ? Row(
@@ -1588,6 +1593,7 @@ class ClipboardController extends GetX.GetxController {
   }
 
   Future<int> getinstavideoinfo(String instalink) async {
+
     var linkEdit = instalink.replaceAll(" ", "").split("/");
     var downloadURL = await http.get(Uri.parse(
         '${linkEdit[0]}//${linkEdit[2]}/${linkEdit[3]}/${linkEdit[4]}' +
@@ -1600,9 +1606,10 @@ class ClipboardController extends GetX.GetxController {
     var node = edges['node'];
     var caption = node['text'];
     currentvideotitle = caption;
-    if(currentvideotitle!.length>15){
-      currentvideotitle!.substring(0,16);
-    }
+    currentvideotitle=currentvideotitle!.length>15?currentvideotitle!.substring(0,16):currentvideotitle;
+    currentvideotitle= currentvideotitle!+randomnum.toString();
+    print("Succesfully converted string=$currentvideotitle");
+
     showdownload = 2;
     update();
     return 0;
